@@ -1,0 +1,62 @@
+name: Publish UnoWeb
+
+on:
+   workflow_dispatch: # This triggers the workflow manually
+
+jobs:
+  build:
+
+    runs-on: linux-latest
+    steps:
+    - uses: actions/checkout@v4
+
+
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.300
+    - name: Setup Project
+      run: |
+       wget -O "AppName.zip" "${{ secrets.PROJECTURL }}"
+       brew install sevenzip
+       7z x "AppName.zip"
+    - name: Setup Uno
+      run: |
+            dotnet tool install -g uno.check
+            uno-check -v --ci --non-interactive --skip androidemulator --skip androidsdk --skip dotnetworkloads-8.0.300 --skip git --skip dotnetnewunotemplates --skip openjdk   --target linux --fix
+
+    - name: Publish App
+      run: |
+         dotnet publish -f net8.0-desktop -c Release -o ./publish --self-contained -p:PublishSingleFile=true
+
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v3.1.0
+      with:
+        path: |
+          ./publish
+    - name : Send Notifcation To User
+      run : |
+        curl --location --globoff 'https://api.onesignal.com/notifications' \
+        --header 'Content-Type: application/json' \
+        --header 'Authorization: Basic ${{ secrets.ONESIGNALAPI}}' \
+        --data '{
+         "app_id": "897e14e3-7897-4206-aa80-ee2fd35c7c0d",
+        "include_subscription_ids": ["89f7d111-cd8a-4c1c-b584-953efe9f4de4"],
+         "contents": {"en": "Succesful Build"}
+          }'
+    - name: Notify on failure
+      if: failure()
+      run: |
+        curl --location --globoff 'https://api.onesignal.com/notifications' \
+        --header 'Content-Type: application/json' \
+        --header 'Authorization: Basic ${{ secrets.ONESIGNALAPI}}' \
+        --data '{
+         "app_id": "897e14e3-7897-4206-aa80-ee2fd35c7c0d",
+        "include_subscription_ids": ["89f7d111-cd8a-4c1c-b584-953efe9f4de4"],
+         "contents": {"en": "Failed Build"}
+          }'
+
+
+
+          
+
+        
