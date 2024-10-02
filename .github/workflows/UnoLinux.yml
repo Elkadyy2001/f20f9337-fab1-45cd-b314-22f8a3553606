@@ -6,7 +6,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
 
@@ -26,7 +26,7 @@ jobs:
 
     - name: Publish App
       run: |
-         dotnet publish -f net8.0-desktop -c Release -o ./publish --self-contained -p:PublishSingleFile=true
+         dotnet publish -f net8.0-desktop -c Release -o ./publish --self-contained -p:PublishSingleFile=true -r linux-x64
 
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v3.1.0
