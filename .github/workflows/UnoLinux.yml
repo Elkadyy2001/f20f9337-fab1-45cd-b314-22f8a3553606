@@ -1,4 +1,4 @@
-name: Publish UnoWeb
+name: Publish UnoLinux
 
 on:
    workflow_dispatch: # This triggers the workflow manually
